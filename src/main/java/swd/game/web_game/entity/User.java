@@ -1,8 +1,12 @@
 package swd.game.web_game.entity;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -19,25 +23,41 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "Users")
+@Table(name = "Users", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {
+                "username"
+        }),
+        @UniqueConstraint(columnNames = {
+                "email"
+        })
+})
+@JsonIgnoreProperties({"hibernateLazyInitializer"})
 public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", updatable = false, nullable = false)
     private Long id;
 
+    @Column(nullable = false)
     private String username;
 
+    @Column(name = "firstName", length = 20)
+    private String firstName;
+    @Column(name = "lastName", length = 20)
+    private String lastName;
+    @JsonIgnore
+    @Size
     private String password;
 
+    @Lob
     private String avatar;
 
+    @Email
     private String email;
 
     @Enumerated(EnumType.STRING)
     private UserStatus status;
-    private String firstname;
 
-    private String lastname;
     private Date createAt;
 
     private Date updateAt;
@@ -50,14 +70,17 @@ public class User implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(role.getName().toString()));
     }
+
     @Override
     public String getUsername() {
         return username;
     }
+
     @Override
     public String getPassword() {
         return password;
     }
+
     @Override
     public boolean isAccountNonExpired() {
         return true;
